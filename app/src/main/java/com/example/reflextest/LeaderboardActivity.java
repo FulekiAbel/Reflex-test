@@ -1,64 +1,68 @@
 package com.example.reflextest;
 
-import static android.content.ContentValues.TAG;
-
+import android.os.Bundle;
 import android.util.Log;
-import android.widget.ListView;
+
+import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class LeaderboardActivity extends AppCompatActivity {
 
-    FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private static final String TAG = "LeaderboardActivity";
 
-    public void insertData(String name, int score) {
-        Map<String, Object> player = new HashMap<>();
-        player.put("name", name);
-        player.put("score", score);
+    private RecyclerView recyclerView;
+    private LeaderboardAdapter adapter;
+    private List<LeaderboardItem> leaderboardList;
 
-        db.collection("leaderboard")
-                .add(player)
-                .addOnSuccessListener(documentReference -> Log.d(TAG, "Player added with ID: " + documentReference.getId()))
-                .addOnFailureListener(e -> Log.w(TAG, "Error adding player", e));
+    private FirebaseFirestore firestore;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_leaderboard);
+
+        recyclerView = findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        leaderboardList = new ArrayList<>();
+        adapter = new LeaderboardAdapter(this, leaderboardList);
+        recyclerView.setAdapter(adapter);
+
+        firestore = FirebaseFirestore.getInstance();
+
+        // Retrieve leaderboard data from Firestore
+        retrieveLeaderboardData();
     }
 
-    // Code to retrieve data from the leaderboard
-    public void getLeaderboard() {
-        db.collection("leaderboard")
-                .orderBy("score", Query.Direction.DESCENDING)
-                .limit(10)
+    private void retrieveLeaderboardData() {
+        // Query Firestore to retrieve leaderboard data
+        firestore.collection("Leaderboard")
+                .orderBy("reflexTime", Query.Direction.ASCENDING)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    List<String> leaderboardList = new ArrayList<>();
-                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                        String name = document.getString("name");
-                        long score = document.getLong("score");
-                        leaderboardList.add(name + ": " + score);
+                    for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                        String userEmail = document.getString("userEmail");
+                        long reflexTime = document.getLong("reflexTime");
+
+                        // Create a LeaderboardItem object and add it to the list
+                        LeaderboardItem item = new LeaderboardItem(userEmail, reflexTime);
+                        leaderboardList.add(item);
                     }
-                    // Update UI with leaderboard data
-                    updateUI(leaderboardList);
+
+                    // Notify the adapter that the dataset has changed
+                    adapter.notifyDataSetChanged();
                 })
-                .addOnFailureListener(e -> Log.w(TAG, "Error getting leaderboard", e));
-    }
-
-    // Displaying the leaderboard data in a RecyclerView
-    private void updateUI(List<String> leaderboardList) {
-        // Initialize the ListView
-        ListView leaderboardListView = findViewById(R.id.leaderboardListView);
-
-        // Create a new LeaderboardAdapter with the leaderboardList data
-        LeaderboardAdapter leaderboardAdapter = new LeaderboardAdapter(this, leaderboardList);
-
-        // Set the adapter for the ListView
-        leaderboardListView.setAdapter(leaderboardAdapter);
+                .addOnFailureListener(e -> {
+                    // Handle any errors
+                    Log.e(TAG, "Error retrieving leaderboard data: ", e);
+                });
     }
 }

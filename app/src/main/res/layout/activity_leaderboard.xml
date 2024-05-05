@@ -4,21 +4,20 @@
     android:layout_height="match_parent">
 
     <TextView
-        android:id="@+id/titleTextView"
-        android:layout_width="wrap_content"
+        android:id="@+id/leaderboardTitleTextView"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Leaderboard"
         android:textSize="24sp"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="20dp"/>
+        android:textStyle="bold"
+        android:gravity="center"
+        android:padding="16dp"/>
 
-    <ListView
-        android:id="@+id/leaderboardListView"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/titleTextView"
-        android:divider="@null"
-        android:dividerHeight="0dp"/>
+        android:layout_below="@id/leaderboardTitleTextView"
+        android:padding="8dp" />
 
 </RelativeLayout>
