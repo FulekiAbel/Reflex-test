@@ -1,5 +1,9 @@
 package com.example.reflextest;
+
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -9,6 +13,9 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
@@ -33,7 +40,6 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseFirestore mFirestore;
 
 
-    // runnable function
     Runnable runnable = new Runnable() {
         @Override
         public void run() {
@@ -41,26 +47,19 @@ public class MainActivity extends AppCompatActivity {
             // set the background on the screen
             relativeLayout.setBackgroundResource(R.color.green);
 
-            // get the system time in milli second
-            // when the screen background is set
             final long time = System.currentTimeMillis();
 
             // function when stop button is clicked
             button2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    // get the system time in milli second
-                    // when the stop button is clicked
                     long time1 = System.currentTimeMillis();
 
-                    // calculate reflex time
                     long reflexTime = time1 - time;
 
                     // display reflex time in toast message
                     Toast.makeText(getApplicationContext(), "Your reflexes takes " + reflexTime + " time to work", Toast.LENGTH_LONG).show();
 
-
-                    // save reflex time to Firebase database
                     saveReflexTimeToFirestore(reflexTime);
 
                     // remove the background again
@@ -79,6 +78,8 @@ public class MainActivity extends AppCompatActivity {
         button1 = findViewById(R.id.btVar1);
         button2 = findViewById(R.id.btVar2);
         leaderboardButton = findViewById(R.id.btVar3);
+
+        mFirestore = FirebaseFirestore.getInstance();
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
@@ -102,13 +103,11 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, LeaderboardActivity.class);
                 startActivity(intent);
-                // Start LeaderboardActivity when Leaderboard button is clicked
                 startActivity(new Intent(MainActivity.this, LeaderboardActivity.class));
             }
         });
     }
     private void saveReflexTimeToFirestore(long newReflexTime) {
-        // Get the current user's UID
         String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         // Reference to the document containing the user's reflex time
@@ -122,24 +121,19 @@ public class MainActivity extends AppCompatActivity {
                         Long currentReflexTime = documentSnapshot.getLong("reflexTime");
                         if (currentReflexTime == null || newReflexTime < currentReflexTime) {
                             // Either there's no reflex time stored yet or the new reflex time is better
-                            // Update the reflex time in Firestore
                             userRef.update("reflexTime", newReflexTime)
                                     .addOnSuccessListener(aVoid -> {
-                                        // Reflex time updated successfully
                                         Log.d(TAG, "Reflex time updated successfully");
-
-                                        // Add the reflex time to the "Times" collection if it's better
+                                        // Add the reflex time to the collection if it's better
                                         addReflexTimeToLeaderboard(userId, newReflexTime);
                                     })
                                     .addOnFailureListener(e -> {
-                                        // Error occurred while updating reflex time
                                         Log.w(TAG, "Error updating reflex time", e);
                                     });
                         } else {
-                            // Current reflex time is better than the new one, no need to update
                             Log.d(TAG, "Current reflex time is better, no update needed");
 
-                            // Add the reflex time to the "Times" collection if it's better
+                            // Add the reflex time to the collection if it's better
                             addReflexTimeToLeaderboard(userId, newReflexTime);
                         }
                     } else {
@@ -148,26 +142,21 @@ public class MainActivity extends AppCompatActivity {
                         reflexTimeData.put("reflexTime", newReflexTime);
                         userRef.set(reflexTimeData)
                                 .addOnSuccessListener(aVoid -> {
-                                    // Reflex time added successfully
                                     Log.d(TAG, "Reflex time added successfully");
 
-                                    // Add the reflex time to the "Times" collection
                                     addReflexTimeToLeaderboard(userId, newReflexTime);
                                 })
                                 .addOnFailureListener(e -> {
-                                    // Error occurred while adding reflex time
                                     Log.w(TAG, "Error adding reflex time", e);
                                 });
                     }
                 })
                 .addOnFailureListener(e -> {
-                    // Error occurred while retrieving user document
                     Log.w(TAG, "Error getting user document", e);
                 });
     }
 
     private void addReflexTimeToLeaderboard(String userId, long newReflexTime) {
-        // Retrieve the current user's email
         String userEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
 
         // Reference to the document containing the user's reflex time in the leaderboard
@@ -181,19 +170,17 @@ public class MainActivity extends AppCompatActivity {
                         Long currentReflexTime = documentSnapshot.getLong("reflexTime");
                         if (currentReflexTime == null || newReflexTime < currentReflexTime) {
                             // Either there's no reflex time stored yet or the new reflex time is better
-                            // Update the reflex time in the leaderboard
                             leaderboardRef.update("reflexTime", newReflexTime)
                                     .addOnSuccessListener(aVoid -> {
-                                        // Reflex time updated successfully
                                         Log.d(TAG, "Reflex time updated in leaderboard successfully");
+                                        Toast.makeText(getApplicationContext(), "Ez az eddigi legjobb időd!", Toast.LENGTH_LONG).show();
                                     })
                                     .addOnFailureListener(e -> {
-                                        // Error occurred while updating reflex time in leaderboard
                                         Log.w(TAG, "Error updating reflex time in leaderboard", e);
                                     });
                         } else {
-                            // Current reflex time is better than the new one, no need to update
                             Log.d(TAG, "Current reflex time is better in leaderboard, no update needed");
+                            Toast.makeText(getApplicationContext(), "Ennél már volt gyorsabb!", Toast.LENGTH_LONG).show();
                         }
                     } else {
                         // User's data doesn't exist in the leaderboard, add the reflex time
@@ -202,22 +189,15 @@ public class MainActivity extends AppCompatActivity {
                         reflexTimeData.put("reflexTime", newReflexTime);
                         leaderboardRef.set(reflexTimeData)
                                 .addOnSuccessListener(aVoid -> {
-                                    // Reflex time added successfully to leaderboard
                                     Log.d(TAG, "Reflex time added to leaderboard successfully");
                                 })
                                 .addOnFailureListener(e -> {
-                                    // Error occurred while adding reflex time to leaderboard
                                     Log.w(TAG, "Error adding reflex time to leaderboard", e);
                                 });
                     }
                 })
                 .addOnFailureListener(e -> {
-                    // Error occurred while retrieving user's data from leaderboard
                     Log.w(TAG, "Error getting user's data from leaderboard", e);
                 });
     }
-
-
-
-
 }

@@ -15,16 +15,13 @@
         android:layout_margin="10dp"
         android:text="Leaderboard" />
 
-    <!--TextView to display game instruction-->
     <TextView
         android:id="@+id/tvVar1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:padding="20dp"
-        android:text="Click on Start first, and wait
-                      until the background color changes.
-                      As soon as it changes hit Stop"
+        android:text="Kattints a Start gombra és amint a háttér szine megváltozik nyomd meg a Stop gombot!"
         android:textSize="25dp" />
 
     <LinearLayout
@@ -35,7 +32,6 @@
         android:orientation="horizontal"
         android:padding="20dp">
 
-        <!--start button-->
         <Button
             android:id="@+id/btVar1"
             android:layout_width="wrap_content"
@@ -43,7 +39,6 @@
             android:layout_margin="10dp"
             android:text="Start" />
 
-        <!--stop button-->
         <Button
             android:id="@+id/btVar2"
             android:layout_width="wrap_content"

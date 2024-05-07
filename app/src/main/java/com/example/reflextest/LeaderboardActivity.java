@@ -38,7 +38,6 @@ public class LeaderboardActivity extends AppCompatActivity {
 
         firestore = FirebaseFirestore.getInstance();
 
-        // Retrieve leaderboard data from Firestore
         retrieveLeaderboardData();
     }
 
@@ -57,11 +56,9 @@ public class LeaderboardActivity extends AppCompatActivity {
                         leaderboardList.add(item);
                     }
 
-                    // Notify the adapter that the dataset has changed
                     adapter.notifyDataSetChanged();
                 })
                 .addOnFailureListener(e -> {
-                    // Handle any errors
                     Log.e(TAG, "Error retrieving leaderboard data: ", e);
                 });
     }

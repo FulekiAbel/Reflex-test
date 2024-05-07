@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -25,6 +26,9 @@ public class LoginActivity extends AppCompatActivity {
     private EditText loginEmail, loginPassword;
     private TextView signupRedirectText;
     private Button loginButton;
+    private CardView cardView;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -36,6 +40,7 @@ public class LoginActivity extends AppCompatActivity {
         loginPassword = findViewById(R.id.login_password);
         loginButton = findViewById(R.id.login_button);
         signupRedirectText = findViewById(R.id.signupRedirectText);
+        cardView = findViewById(R.id.cardView);
 
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -69,11 +74,36 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-            signupRedirectText.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
-                }
-            });
+        signupRedirectText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                flipCard();
+            }
+        });
+    }
+
+    private void flipCard() {
+        cardView.animate()
+                .withLayer()
+                .rotationY(90)
+                .setDuration(300)
+                .withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Swap visibility of the card content
+                        if (cardView.getRotationY() == 90) {
+                            cardView.setRotationY(-90);
+                            startActivity(new Intent(LoginActivity.this, LoginActivity.class));
+                        } else {
+                            cardView.setRotationY(0);
+                        }
+
+                        cardView.animate()
+                                .rotationY(0)
+                                .setDuration(300)
+                                .start();
+                    }
+                })
+                .start();
     }
 }
